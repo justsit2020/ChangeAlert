@@ -1,0 +1,22 @@
+<!-- templates/profile.html -->
+{% extends 'base.html' %}
+{% block title %}个人资料{% endblock %}
+{% block content %}
+<h1>个人资料</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" class="form-control" id="username" name="username" value="{{ user['username'] }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="email">邮箱</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ user['email'] }}">
+    </div>
+    <div class="form-group">
+        <label for="new_password">新密码（留空则不修改）</label>
+        <input type="password" class="form-control" id="new_password" name="new_password">
+    </div>
+    <button class="btn btn-primary" type="submit">更新资料</button>
+</form>
+{% endblock %}

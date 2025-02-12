@@ -1,0 +1,22 @@
+<!-- templates/register.html -->
+{% extends 'base.html' %}
+{% block title %}注册{% endblock %}
+{% block content %}
+<h1>注册</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+        <label for="email">邮箱（可选）</label>
+        <input type="email" class="form-control" id="email" name="email">
+    </div>
+    <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button class="btn btn-primary" type="submit" disabled>注册</button>
+</form>
+{% endblock %}

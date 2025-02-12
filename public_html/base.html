@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}网页监控系统{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{{ url_for('index') }}">监控系统</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ml-auto">
+            {% if g.user %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('add_rule') }}">添加监控规则</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">个人资料</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">注销</a></li>
+            {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">登录</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">注册</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+<div class="container mt-4">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-warning">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
+<!-- Audio 元素，用于播放提示音 -->
+<audio id="notify-sound" src="{{ g.default_sound }}" preload="auto"></audio>
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+      var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+      $.ajaxSetup({
+          beforeSend: function(xhr, settings) {
+              if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                  xhr.setRequestHeader("X-CSRFToken", csrfToken);
+              }
+          }
+      });
+
+      // 全选
+      $("#selectAll").on("click", function(){
+          $(".log-checkbox").prop("checked", true);
+      });
+      // 反选
+      $("#reverseSelect").on("click", function(){
+          $(".log-checkbox").each(function(){
+              $(this).prop("checked", !$(this).prop("checked"));
+          });
+      });
+      // 全不选
+      $("#deselectAll").on("click", function(){
+          $(".log-checkbox").prop("checked", false);
+      });
+      // 批量删除
+      $("#batchDelete").on("click", function(){
+          var ids = [];
+          $(".log-checkbox:checked").each(function(){
+              ids.push($(this).data("id"));
+          });
+          if(ids.length === 0){
+              alert("请选择至少一项删除");
+              return;
+          }
+          if(confirm("确定要删除选中的记录吗？")){
+              $.ajax({
+                  url: "{{ url_for('batch_delete_logs') }}",
+                  method: "POST",
+                  contentType: "application/json",
+                  data: JSON.stringify({ids: ids}),
+                  success: function(response){
+                      if(response.success){
+                          // 删除成功后刷新页面或移除对应行
+                          location.reload();
+                      } else {
+                          alert("删除失败，请重试");
+                      }
+                  },
+                  error: function(){
+                      alert("请求出错，请稍后重试");
+                  }
+              });
+          }
+      });
+
+      // 1. 一次性用户交互：激活音频播放权限
+      function unlockAudio() {
+          var audioElem = document.getElementById('notify-sound');
+          audioElem.play().then(function() {
+              audioElem.pause();
+              audioElem.currentTime = 0;
+              console.log("音频播放权限已解锁");
+          }).catch(function(error) {
+              console.error("激活音频播放失败:", error);
+          });
+      }
+    
+document.addEventListener('click', unlockAudio, { once: true });
+
+// 2. 播放提示音函数
+function playNotification(soundUrl) {
+    var audioElem = document.getElementById('notify-sound');
+    if (soundUrl && soundUrl.trim() !== "") {
+        audioElem.src = soundUrl;
+    } else {
+        audioElem.src = "{{ url_for('static', filename='sounds/default.mp3') }}";
+    }
+    audioElem.play().catch(function(error) {
+        console.error("播放提示音失败:", error);
+    });
+}
+
+// 3. 全局变量：记录上一次接收到的最新日志时间戳
+var lastNotifiedTimestamp = null;
+
+// 4. 定时轮询检测日志更新，检测到更新后播放提示音
+function pollUpdates() {
+    $.ajax({
+        url: "{{ url_for('api_latest_update') }}",
+        method: "GET",
+        dataType: "json",
+        success: function(data) {
+            if (data.timestamp) {
+                var newTimestamp = data.timestamp.replace(" ", "T");
+                if (!lastNotifiedTimestamp) {
+                    // 首次轮询时只保存时间戳
+                    lastNotifiedTimestamp = data.timestamp;
+                } else if (new Date(newTimestamp) > new Date(lastNotifiedTimestamp.replace(" ", "T"))) {
+                    // 检测到日志更新：传入接口返回的 sound_url 播放提示音
+                    playNotification(data.sound_url);
+                    lastNotifiedTimestamp = data.timestamp;
+                }
+            }
+        },
+        error: function(err) {
+            console.error("获取更新失败：", err);
+        },
+        complete: function() {
+            setTimeout(pollUpdates, 5000);
+        }
+    });
+}
+
+$(document).ready(function() {
+    pollUpdates();
+});
+</script>
+
+{% endblock %}
+
+</body>
+</html>

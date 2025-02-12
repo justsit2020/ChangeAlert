@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}{{ rule['name'] }} - 日志{% endblock %}
+{% block content %}
+<h1>{{ rule['name'] }} - 日志</h1>
+<div class="mb-2">
+    <button id="select-all-btn" class="btn btn-sm btn-primary">全选</button>
+    <button id="reverse-select-btn" class="btn btn-sm btn-secondary">反选</button>
+    <button id="batch-delete-btn" class="btn btn-sm btn-danger">批量删除</button>
+</div>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th style="width:50px;"><input type="checkbox" id="master-checkbox"></th>
+            <th>时间</th>
+            <th>旧值</th>
+            <th>新值</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody id="logs-table-body">
+        {% for log in logs %}
+        <tr>
+            <td><input type="checkbox" class="log-checkbox" data-id="{{ log['id'] }}"></td>
+            <td>{{ log['timestamp'] }}</td>
+            <td>{{ log['old_value'] }}</td>
+            <td>{{ log['new_value'] }}</td>
+            <td>
+               <form action="{{ url_for('delete_log', log_id=log['id']) }}" method="post" style="display:inline;">
+                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                   <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('确定要删除此日志记录吗？');">删除</button>
+               </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a class="btn btn-secondary" href="{{ url_for('index') }}">返回仪表盘</a>
+{% endblock %}
+{% block scripts %}
+<script>
+    // 用于保存已选中的日志记录ID（对象形式便于查找）
+    var selectedLogIds = {};
+
+    // 更新 selectedLogIds（遍历当前页面中的复选框）
+    function updateSelectedLogIds() {
+        $('.log-checkbox').each(function(){
+            var id = $(this).data('id');
+            if ($(this).is(':checked')) {
+                selectedLogIds[id] = true;
+            } else {
+                delete selectedLogIds[id];
+            }
+        });
+    }
+
+    // 根据 selectedLogIds 应用复选框的选中状态
+    function applySelectedState() {
+        $('.log-checkbox').each(function(){
+            var id = $(this).data('id');
+            if (selectedLogIds[id]) {
+                $(this).prop('checked', true);
+            }
+        });
+    }
+
+    // AJAX轮询获取日志数据，每3秒刷新一次
+    function refreshLogs() {
+        // 记录当前的选中状态
+        updateSelectedLogIds();
+        $.ajax({
+            url: "{{ url_for('api_logs', rule_id=rule['id']) }}",
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var tbodyHtml = '';
+                for (var i = 0; i < data.length; i++) {
+                    var log = data[i];
+                    tbodyHtml += '<tr>';
+                    tbodyHtml += '<td><input type="checkbox" class="log-checkbox" data-id="' + log.id + '"></td>';
+                    tbodyHtml += '<td>' + log.timestamp + '</td>';
+                    tbodyHtml += '<td>' + log.old_value + '</td>';
+                    tbodyHtml += '<td>' + log.new_value + '</td>';
+                    tbodyHtml += '<td>';
+                    tbodyHtml += '<form action="/delete_log/' + log.id + '" method="post" style="display:inline;">';
+                    tbodyHtml += '<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">';
+                    tbodyHtml += '<button class="btn btn-sm btn-danger" type="submit" onclick="return confirm(\'确定要删除此日志记录吗？\');">删除</button>';
+                    tbodyHtml += '</form>';
+                    tbodyHtml += '</td>';
+                    tbodyHtml += '</tr>';
+                }
+                $('#logs-table-body').html(tbodyHtml);
+                // 恢复之前选中的复选框状态
+                applySelectedState();
+            },
+            error: function() {
+                console.log("刷新失败");
+            }
+        });
+    }
+    // 设置定时刷新
+    setInterval(refreshLogs, 3000);
+
+    // 绑定复选框点击事件，实时更新选中状态
+    $(document).on('click', '.log-checkbox', function(){
+        updateSelectedLogIds();
+    });
+
+    // 全选按钮
+    $('#select-all-btn').click(function(){
+        $('.log-checkbox').prop('checked', true);
+        updateSelectedLogIds();
+    });
+
+    // 反选按钮
+    $('#reverse-select-btn').click(function(){
+        $('.log-checkbox').each(function(){
+            $(this).prop('checked', !$(this).is(':checked'));
+        });
+        updateSelectedLogIds();
+    });
+
+    // 批量删除按钮
+    $('#batch-delete-btn').click(function(){
+        var ids = Object.keys(selectedLogIds);
+        if(ids.length === 0){
+            alert("请选择至少一项删除");
+            return;
+        }
+        if(confirm("确定要删除选中的记录吗？")){
+            $.ajax({
+                url: "{{ url_for('batch_delete_logs') }}",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ids: ids}),
+                success: function(response){
+                    if(response.success){
+                        // 删除成功后刷新日志
+                        refreshLogs();
+                        // 清空选中状态
+                        selectedLogIds = {};
+                    } else {
+                        alert("删除失败，请重试");
+                    }
+                },
+                error: function(){
+                    alert("请求出错，请稍后重试");
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

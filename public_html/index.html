@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}监控仪表盘{% endblock %}
+{% block content %}
+<h1>监控仪表盘</h1>
+
+<!-- 内嵌样式，设置 URL 列和按钮网格布局 -->
+<style>
+  /* 限制 URL 列显示长度 */
+  .url-cell {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* 固定两行按钮的网格布局，按 2 列排列 */
+  .button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  .btn {
+    white-space: nowrap;
+  }
+</style>
+
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>规则名称</th>
+        <th class="url-cell">URL</th>
+        <th>CSS 选择器</th>
+        <th>当前值</th>
+        <th>最后检测时间</th>
+        <th>状态</th>
+        {% if g.user %}
+          <th>操作</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody id="rules-table-body">
+      {% for rule in rules %}
+      <tr>
+        <td>{{ rule['name'] }}</td>
+        <td class="url-cell">{{ rule['url'] }}</td>
+        <td>{{ rule['selector'] }}</td>
+        <td>{{ rule['last_value'] }}</td>
+        <td>
+          {% if rule['last_checked'] %}
+          {{ rule['last_checked'][:19] }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td>
+          {% if rule['enabled'] == 1 %}
+            <span class="badge badge-success">启用</span>
+          {% else %}
+            <span class="badge badge-secondary">禁用</span>
+          {% endif %}
+        </td>
+        {% if g.user %}
+        <td>
+          <div class="button-grid">
+            <a class="btn btn-sm btn-info" href="{{ url_for('edit_rule', rule_id=rule['id']) }}">编辑</a>
+            <form action="{{ url_for('delete_rule', rule_id=rule['id']) }}" method="post" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-danger" type="submit">删除</button>
+            </form>
+            <a class="btn btn-sm btn-secondary" href="{{ url_for('view_logs', rule_id=rule['id']) }}">日志</a>
+            <form action="{{ url_for('toggle_rule', rule_id=rule['id']) }}" method="post" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if rule['enabled'] == 1 %}
+                <button class="btn btn-sm btn-warning" type="submit">禁用</button>
+              {% else %}
+                <button class="btn btn-sm btn-success" type="submit">启用</button>
+              {% endif %}
+            </form>
+          </div>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+// 用于播放提示音函数
+function playNotification(url) {
+    if (url) {
+        var audio = new Audio(url);
+        // 尝试播放提示音
+        audio.play().catch(function(error) {
+            console.error("播放提示音失败：", error);
+        });
+    } else {
+        console.log("没有设置提示音");
+    }
+}
+
+// 刷新监控规则列表
+function refreshTable() {
+    // 从 meta 标签中获取 CSRF token
+    var csrf_token = $('meta[name="csrf-token"]').attr('content');
+    $.ajax({
+        url: "{{ url_for('api_rules') }}",
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            var tbodyHtml = '';
+            for (var i = 0; i < data.length; i++) {
+                var rule = data[i];
+                tbodyHtml += '<tr>';
+                tbodyHtml += '<td>' + rule.name + '</td>';
+                tbodyHtml += '<td class="url-cell">' + rule.url + '</td>';
+                tbodyHtml += '<td>' + rule.selector + '</td>';
+                tbodyHtml += '<td>' + rule.last_value + '</td>';
+                tbodyHtml += '<td>' + rule.last_checked.substring(0, 19) + '</td>';
+                tbodyHtml += '<td>';
+                if (rule.enabled == 1) {
+                    tbodyHtml += '<span class="badge badge-success">启用</span>';
+                } else {
+                    tbodyHtml += '<span class="badge badge-secondary">禁用</span>';
+                }
+                tbodyHtml += '</td>';
+                {% if g.user %}
+                tbodyHtml += '<td>';
+                tbodyHtml += '<div class="button-grid">';
+                tbodyHtml += '<a class="btn btn-sm btn-info" href="/edit/' + rule.id + '">编辑</a>';
+                // 删除表单，添加隐藏的 CSRF token 字段
+                tbodyHtml += '<form action="/delete/' + rule.id + '" method="post" class="d-inline">';
+                tbodyHtml += '<input type="hidden" name="csrf_token" value="' + csrf_token + '">';
+                tbodyHtml += '<button class="btn btn-sm btn-danger" type="submit">删除</button>';
+                tbodyHtml += '</form>';
+                tbodyHtml += '<a class="btn btn-sm btn-secondary" href="/logs/' + rule.id + '">日志</a>';
+                // 切换状态表单，添加 CSRF token
+                tbodyHtml += '<form action="/toggle_rule/' + rule.id + '" method="post" class="d-inline">';
+                tbodyHtml += '<input type="hidden" name="csrf_token" value="' + csrf_token + '">';
+                if (rule.enabled == 1) {
+                    tbodyHtml += '<button class="btn btn-sm btn-warning" type="submit">禁用</button>';
+                } else {
+                    tbodyHtml += '<button class="btn btn-sm btn-success" type="submit">启用</button>';
+                }
+                tbodyHtml += '</form>';
+                tbodyHtml += '</div>';
+                tbodyHtml += '</td>';
+                {% endif %}
+                tbodyHtml += '</tr>';
+            }
+            $('#rules-table-body').html(tbodyHtml);
+        },
+        error: function() {
+            console.log("刷新失败");
+        }
+    });
+}
+setInterval(refreshTable, 3000);
+
+/* ========== 新增：轮询最新更新并播放提示音 ========== */
+
+// 全局变量记录上一次接收到的最新日志时间戳
+var lastNotifiedTimestamp = null;
+
+function pollUpdates() {
+    $.ajax({
+        url: "{{ url_for('api_latest_update') }}",
+        method: "GET",
+        dataType: "json",
+        success: function(data) {
+            if (data.timestamp) {
+                // 将 timestamp 中的空格替换为 T（以便 Date 对象解析）
+                var newTimestamp = data.timestamp.replace(" ", "T");
+                if (!lastNotifiedTimestamp) {
+                    // 初次轮询时记录时间戳，不播放提示音
+                    lastNotifiedTimestamp = data.timestamp;
+                } else if (new Date(newTimestamp) > new Date(lastNotifiedTimestamp.replace(" ", "T"))) {
+                    // 检测到更新，调用播放函数
+                    playNotification(data.sound_url);
+                    lastNotifiedTimestamp = data.timestamp;
+                }
+            }
+        },
+        error: function(err) {
+            console.error("获取更新失败：", err);
+        },
+        complete: function() {
+            // 5秒后再次轮询
+            setTimeout(pollUpdates, 5000);
+        }
+    });
+}
+pollUpdates();
+
+/* ========== 解除浏览器自动播放限制（需用户交互） ========== */
+document.addEventListener('click', function unlockAudio() {
+    // 创建一个 Audio 对象播放空白声音以激活权限
+    var audio = new Audio();
+    audio.play().catch(function(e){});
+    // 仅执行一次
+    document.removeEventListener('click', unlockAudio);
+});
+</script>
+{% endblock %}

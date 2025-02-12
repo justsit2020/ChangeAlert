@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}添加监控规则{% endblock %}
+{% block content %}
+<h1>添加监控规则</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+        <label for="name">规则名称</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="请输入规则名称" required>
+    </div>
+    <div class="form-group">
+        <label for="url">监控 URL</label>
+        <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com" required>
+    </div>
+    <div class="form-group">
+        <label for="selector">CSS 选择器</label>
+        <input type="text" class="form-control" id="selector" name="selector" placeholder="例如：div.date" required>
+    </div>
+    <div class="form-group">
+        <label for="sound_url">提示音 URL（可选）</label>
+        <input type="url" class="form-control" id="sound_url" name="sound_url" placeholder="http://example.com/your_sound.mp3">
+    </div>
+    <div class="form-group">
+        <label for="notification_emails">通知邮箱 (多个邮箱以逗号分隔)</label>
+        <input type="text" class="form-control" id="notification_emails" name="notification_emails" placeholder="例如: a@example.com,b@example.com">
+    </div>
+    <div class="form-group">
+        <label for="use_scraper">使用 Cloudscraper（适用于存在CF五秒盾的情况）</label>
+        <input type="checkbox" id="use_scraper" name="use_scraper" value="1" checked>
+    </div>
+    <button class="btn btn-primary" type="submit">添加规则</button>
+</form>
+{% endblock %}
