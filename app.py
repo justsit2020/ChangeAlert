@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ========== 配置 ==========
 DATABASE = 'monitor.db'
 CHECK_INTERVAL = 10  # 检测间隔（秒）
-NOTIFICATION_ENABLED = True  # 是否启用邮件通知，开启为True，关闭为False
+NOTIFICATION_ENABLED = False  # 是否启用邮件通知，开启为True，关闭为False
 
 # 邮件配置
 MAIL_SERVER = 'smtp.example.com'  #  替换为您的 SMTP 服务器地址，例如 smtp.example.com
@@ -32,7 +32,7 @@ from flask_wtf.csrf import CSRFProtect
 
 csrf = CSRFProtect(app)
 
-app.config['REGISTRATION_ENABLED'] = False  # False是关闭注册功能
+app.config['REGISTRATION_ENABLED'] = True  # False是关闭注册功能
 
 # 定义北京时间时区
 beijing_tz = timezone(timedelta(hours=8))
