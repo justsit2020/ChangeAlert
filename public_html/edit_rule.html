@@ -25,8 +25,7 @@
         <label for="use_scraper">使用 Cloudscraper</label>
         <input type="checkbox" id="use_scraper" name="use_scraper" value="1" {% if rule['use_scraper'] == 1 %}checked{% endif %}>
     </div>
-    
-    <!-- 新增：通知邮箱配置区域 -->
+
     <div class="form-group">
         <label>通知邮箱配置</label>
         <div id="email-container">
@@ -48,7 +47,6 @@
 {% block scripts %}
 <script>
 $(document).ready(function(){
-    // 添加邮箱按钮点击事件
     $("#add-email-btn").on("click", function(){
         var emailItem = `
         <div class="email-item" style="margin-bottom: 8px;">
@@ -58,7 +56,7 @@ $(document).ready(function(){
         `;
         $("#email-container").append(emailItem);
     });
-    // 绑定删除邮箱项事件（事件委托，防止内存泄漏）
+
     $("#email-container").on("click", ".remove-email", function(){
         $(this).closest(".email-item").remove();
     });
