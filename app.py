@@ -368,7 +368,7 @@ def add_rule():
         url_rule = request.form['url']
         selector = request.form['selector']
         sound_url = request.form.get('sound_url')
-[
+
         if not sound_url:
             sound_url = url_for('static', filename='sounds/default.mp3', _external=True)
         # 复选框处理：若勾选，则 use_scraper 为 1，否则 0
