@@ -1,4 +1,6 @@
 # Serv00-ChangeAlert
+点击切换语言 [English](README.md) | [繁體中文](README.zh_TW.md)
+
 该项目是一个基于 Flask 的网页监控应用，用于定时抓取指定网页内容、检测变化并记录日志，同时支持邮件通知和前端提示音功能。
 ![img](static/image/readme/0.png)
 ---
