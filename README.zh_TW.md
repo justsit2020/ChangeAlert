@@ -68,7 +68,7 @@ app.run（host='0.0.0.0'，port=8080，debug=False）# 埠填寫申請的埠
 screen python app.py # 啟動程式碼，若行程被殺依舊可以使用此命令重啓
 ```
      
-- 可使用``screen -list``查看行程號並使用``screen -r行程號``查看後臺程式碼並使用``ctrl+a`` ``d``分離行程
+- 可使用``screen -list``查看行程號並使用``screen -r 行程號``查看後臺程式碼並使用``ctrl+a`` ``d``分離行程
    
 - 輸入網址``用戶名.serv00.net:埠``進入面板後進行注册，建議注册成功後關閉行程，將注册功能關閉
 ![img](static/image/readme/4.png)
