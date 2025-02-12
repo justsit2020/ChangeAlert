@@ -21,13 +21,41 @@
         <input type="url" class="form-control" id="sound_url" name="sound_url" placeholder="http://example.com/your_sound.mp3">
     </div>
     <div class="form-group">
-        <label for="notification_emails">通知邮箱 (多个邮箱以逗号分隔)</label>
-        <input type="text" class="form-control" id="notification_emails" name="notification_emails" placeholder="例如: a@example.com,b@example.com">
-    </div>
-    <div class="form-group">
         <label for="use_scraper">使用 Cloudscraper（适用于存在CF五秒盾的情况）</label>
         <input type="checkbox" id="use_scraper" name="use_scraper" value="1" checked>
     </div>
+    <div class="form-group">
+        <label>通知邮箱配置</label>
+        <div id="email-container">
+            {% for email in rule_emails %}
+            <div class="email-item" style="margin-bottom: 8px;">
+                <input type="email" name="emails[]" class="form-control" style="display: inline-block; width: 70%;" value="{{ email['email'] }}" required>
+                <button type="button" class="btn btn-sm btn-danger remove-email" style="display: inline-block; margin-left: 10px;">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" id="add-email-btn" class="btn btn-sm btn-info" style="margin-top: 10px;">
+            <i class="fa fa-plus"></i> 添加邮箱
+        </button>
+    </div>
     <button class="btn btn-primary" type="submit">添加规则</button>
 </form>
+{% endblock %}
+{% block scripts %}
+<script>
+$(document).ready(function(){
+    $("#add-email-btn").on("click", function(){
+        var emailItem = `
+        <div class="email-item" style="margin-bottom: 8px;">
+            <input type="email" name="emails[]" class="form-control" style="display: inline-block; width: 70%;" placeholder="请输入邮箱" required>
+            <button type="button" class="btn btn-sm btn-danger remove-email" style="display: inline-block; margin-left: 10px;">×</button>
+        </div>
+        `;
+        $("#email-container").append(emailItem);
+    });
+    $("#email-container").on("click", ".remove-email", function(){
+        $(this).closest(".email-item").remove();
+    });
+});
+</script>
 {% endblock %}
