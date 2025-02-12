@@ -1,4 +1,6 @@
 # Serv00-ChangeAlert
+點擊切換語言 [English](README.md) | [简体中文](README.zh_CN.md)
+
 該項目是一個基於Flask的網頁監控應用，用於定時抓取指定網頁內容、檢測變化並記錄日誌，同時支持郵件通知和前端提示音功能。
 ![img](static/image/readme/0.png)
 ---
