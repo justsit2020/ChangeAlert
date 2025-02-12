@@ -1,83 +1,88 @@
 # Serv00-ChangeAlert
-该项目是一个基于 Flask 的网页监控应用，用于定时抓取指定网页内容、检测变化并记录日志，同时支持邮件通知和前端提示音功能。
+Click to switch language [简体中文](README.zh_CN.md) | [繁體中文](README.zh_TW.md)
+
+This project is a web monitoring application based on Flask, which is used to periodically capture the content of a specified web page, detect changes and record logs. It also supports email notifications and front-end prompt sounds.
 ![img](static/image/readme/0.png)
 ---
 
-## 功能概述
+## Function Overview
 
-- **网页内容监控**：定时抓取目标 URL 网页内容，使用 CSS 选择器提取指定元素，检测内容是否发生变化。
-- **用户管理**：提供用户登录、注销以及资料更新功能。（注册功能默认关闭，可根据需要开启）
-- **监控规则管理**：允许用户添加、编辑、删除监控规则，每条规则包含名称、URL、CSS 选择器、提示音 URL 等信息。
-- **日志记录**：每当监控规则检测到网页内容变化时，记录旧值、新值以及变化时间到日志表中。
-- **邮件通知**：若启用邮件通知功能，当检测到网页变化时，系统会自动发送邮件提醒。
-- **前端提示音**：当监控规则变化时，前端可播放提示音，默认提示音文件位于 `static/sounds/default.mp3`。
+- **Web Content Monitoring**: Periodically capture the content of the target URL web page, use CSS selectors to extract specified elements, and detect whether the content has changed.
+
+- **User Management**: Provides user login, logout and profile update functions. (The registration function is closed by default and can be enabled as needed)
+
+- **Monitoring Rule Management**: Allows users to add, edit and delete monitoring rules. Each rule contains information such as name, URL, CSS selector, and prompt sound URL.
+
+- **Log Recording**: Whenever a monitoring rule detects a change in web page content, the old value, new value and change time are recorded in the log table.
+
+- **Email Notification**: If the email notification function is enabled, the system will automatically send an email reminder when a web page change is detected.
+- **Front-end prompt sound**: When the monitoring rules change, the front-end can play the prompt sound. The default prompt sound file is located in `static/sounds/default.mp3`.
 
 ---
 
-## 部署步骤
+## Deployment steps
 
-1. **环境准备**  
-   - 安装 Python 3.6 及以上版本。  
-   - 推荐使用虚拟环境：
-     ```bash
-     python3 -m venv venv
-     # Linux/MacOS
-     source venv/bin/activate
-     # Windows
-     venv\Scripts\activate
-     ```
+1. **Environment preparation**
+- Install Python 3.6 and above.
+- It is recommended to use a virtual environment:
+```bash
+python3 -m venv venv
+# Linux/MacOS
+source venv/bin/activate
+# Windows
+venv\Scripts\activate
+```
 
-2. **具体部署步骤** 
-   - 首先打开 ``Serv00`` 控制面板，添加上运行权限和相应端口![img](static/image/readme/1.png)![img](static/image/readme/2.png)
-   
-   - 使用SSH连接 ``Serv00`` 后定位到需要安装的位置
-   
-     ```bash
-     cd domains/username.serv00.net # 此处username按实际用户名填写
-     git clone https://github.com/justsit2020/ChangeAlert.git # 克隆我的项目
-     cd ChangeAlert
-     python3 -m venv myenv # 创建虚拟环境
-     source venv/bin/activate # 激活虚拟环境
-     pip install -r requirements.txt # 安装相关库
-     ```
-   
+2. **Specific deployment steps**
+- First open the ``Serv00`` control panel, add the upper permission and the corresponding port![img](static/image/readme/1.png)![img](static/image/readme/2.png)
 
-     ![img](static/image/readme/3.png)
-   
-   - 修改``app.py``相关设置，可选择修改的地方如下：
-     
-     ```bash
-     NOTIFICATION_ENABLED = True  # 是否启用邮件通知，开启为True
-     MAIL_SERVER = 'smtp.example.com'  #  替换为您的 SMTP 服务器地址
-     MAIL_PORT = 587  #  SMTP 端口，常用端口为 587 (TLS) 或 465 (SSL)
-     MAIL_USERNAME = 'SMTP Username'  #  SMTP 用户名
-     MAIL_PASSWORD = 'SMTP Password'  #  SMTP 密码
-     MAIL_FROM = 'sender@example.com'  #  发件人邮箱地址
-     MAIL_TO = 'receiver@example.com'  #  接收通知的邮箱地址
-      app.secret_key = 'fiZWLrANSBgtfnQ7'  # 请设置为随机字符串
-      app.config['REGISTRATION_ENABLED'] = True  # False是关闭注册功能，建议注册后关闭
-     ```
-     
-   - 必须要修改的地方如下：
-     ```bash
-     app.run(host='0.0.0.0', port=8080, debug=False) # 端口填写申请的端口
-     ```
-     
-   - 使用以下命令启动代码并将其在后台运行
-     ```bash
-     screen python app.py # 启动代码,若进程被杀依旧可以使用此命令重启
-     ```
-     
-   - 可使用``screen -list``查看进程号并使用``screen -r 进程号``查看后台代码并使用``ctrl+a`` ``d``分离进程
-   
-   - 输入网址``用户名.serv00.net:端口``进入面板后进行注册，建议注册成功后关闭进程，将注册功能关闭
-   ![img](static/image/readme/4.png)
-3. **编辑规则**
-   - 登录后点击右上角的添加监控规则，规则名称自定义，URL填写需要监控的URL，css选择器的设置参考以下步骤：
-    - 使用``ctrl+shift+c``并用鼠标点击需要监控的值，尽量范围选择小一些，css选择器即可填写``span.button.is-large.is-flexible`` ![img](static/image/readme/5.png)
-    - 提示音可选择填写，不填写默认提示音，此提示音不是默认开启，打开网页后如需要提示音需要点击左上角的监控系统开启而不能刷新，因为浏览器默认阻止了播放提示音的规则，点击后会播放一段静音的音频。
-    - 若网站有cloudflare的五秒盾可以选择勾选使用 Cloudscraper，不过并不是百分百能通过，有一定时间不能通过，可能与刷新时长有关
-    - 通知邮箱配置可选填，如果不填写默认按照``app.py``中配置的邮箱发送消息（如果开启了通知）
+- Use SSH to connect to ``Serv00`` and locate the location where you need to install
 
-4. **鸣谢**
-   - 最后很感谢serv00官方能提供这么好的免费服务器供大家学习使用，此项目界面简单，若有不完备的地方希望有能力者能优化一下并进行开源，如能带上本人将不胜荣幸，此项目皆在AI指导下完成，请禁止商用。
+```bash
+cd domains/username.serv00.net # Here, username is filled in according to the actual user name
+git clone https://github.com/justsit2020/ChangeAlert.git # Clone my project
+cd ChangeAlert
+python3 -m venv myenv # Create a virtual environment
+source venv/bin/activate # Activate the virtual environment
+pip install -r requirements.txt # Install related libraries
+```
+
+![img](static/image/readme/3.png)
+
+- Modify the relevant settings of ``app.py``. The optional modifications are as follows:
+
+```bash
+NOTIFICATION_ENABLED = True # Whether to enable email notifications, turn on True
+MAIL_SERVER = 'smtp.example.com' # Replace with your SMTP server address
+MAIL_PORT = 587 # SMTP port, commonly used ports are 587 (TLS) or 465 (SSL)
+MAIL_USERNAME = 'SMTP Username' # SMTP username
+MAIL_PASSWORD = 'SMTP Password' # SMTP password
+MAIL_FROM = 'sender@example.com' # Sender's email address
+MAIL_TO = 'receiver@example.com' # Email address for receiving notifications
+app.secret_key = 'fiZWLrANSBgtfnQ7' # Please set it to a random string
+app.config['REGISTRATION_ENABLED'] = True # False means to turn off the registration function. It is recommended to turn it off after registration
+```
+
+- The places that must be modified are as follows:
+```bash
+app.run(host='0.0.0.0', port=8080, debug=False) # Fill in the requested port for the port
+```
+
+- Use the following command to start the code and run it in the background
+```bash
+screen python app.py # Start the code. If the process is killed, you can still use this command to restart it
+```
+
+- You can use ``screen -list`` to view the process number and use ``screen -r process number`` to view the background code and use ``ctrl+a`` ``d`` to separate the process
+
+- Enter the URL ``username.serv00.net:port`` to enter the panel and register. It is recommended to close the process after successful registration and turn off the registration function
+![img](static/image/readme/4.png)
+3. **Edit rules**
+- After logging in, click Add Monitoring Rule in the upper right corner, customize the rule name, fill in the URL to be monitored, and refer to the following steps for the setting of the CSS selector:
+- Use ``ctrl+shift+c`` and click the value to be monitored with the mouse, try to select a smaller range, and fill in the CSS selector ``span.button.is-large.is-flexible``![img](static/image/readme/5.png)
+- The prompt sound can be selected. If it is not filled in, the default prompt sound is not enabled by default. After opening the web page, if you need the prompt sound, you need to click the monitoring system in the upper left corner to turn it on and cannot refresh it, because the browser blocks the rule of playing the prompt sound by default. After clicking, a silent audio will be played.
+- If the website has cloudflare's five-second shield, you can choose to use Cloudscraper, but it is not 100% passable. It may not pass for a certain period of time, which may be related to the refresh time.
+- Notification email configuration is optional. If it is not filled in, the default is to send messages according to the email configured in ``app.py`` (if notifications are turned on)
+
+4. **Thanks**
+- Finally, I would like to thank serv00 officials for providing such a good free server for everyone to learn and use. This project has a simple interface. If there are any incomplete places, I hope that those who are capable can optimize it and open source it. It will be an honor for me if you can bring me along. This project is completed under the guidance of AI. Please do not use it commercially.
