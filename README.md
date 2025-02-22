@@ -81,7 +81,7 @@ screen python app.py # Start the code. If the process is killed, you can still u
 - After logging in, click Add Monitoring Rule in the upper right corner, customize the rule name, fill in the URL to be monitored, and refer to the following steps for the setting of the CSS selector:
 - Use ``ctrl+shift+c`` and click the value to be monitored with the mouse, try to select a smaller range, and fill in the CSS selector ``span.button.is-large.is-flexible``![img](static/image/readme/5.png)
 - The prompt sound can be selected. If it is not filled in, the default prompt sound is not enabled by default. After opening the web page, if you need the prompt sound, you need to click the monitoring system in the upper left corner to turn it on and cannot refresh it, because the browser blocks the rule of playing the prompt sound by default. After clicking, a silent audio will be played.
-- If the website has cloudflare's five-second shield, you can choose to use Cloudscraper, but it is not 100% passable. It may not pass for a certain period of time, which may be related to the refresh time.
+- If the website has cloudflare's five-second shield, you can choose to use Cloudscraper, but it is not 100% passable. 
 - Notification email configuration is optional. If it is not filled in, the default is to send messages according to the email configured in ``app.py`` (if notifications are turned on)
 
 4. **Thanks**
